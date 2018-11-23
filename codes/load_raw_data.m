@@ -14,19 +14,9 @@ function [OPC_data,cRIO_data,ColumnHeaders] = load_raw_data(inputDir,outputDir)
 %         dataColumnHeaders: one cell contain all the column headers names
 %         
 % what should be done in this function:
-%     load all raw data and combine them together
-%     delete duplicate rows
-%     sort by time ascendingly
-%     create a new column for run number, dozens runs in all
-%     plot raw data by run for check. figure includ: OPC reading, temperatuers, valve ...
-%     delete invalid data acording to experimental notes
-%     backup outputs matrix and cell to a .mat file
-% 
-% notes:
-%     the time of OPC file is the end time of every 5 seconds.
-%     the time of cRIO is the exactly the sampling time.
+%     load all OPC and cRIO raw data and combine them together into two files
 
-%% Load all raw data and combine them together
+%% Load all raw data
 
 %%%%%%%%%%%%%%%%%
 % Load OPC data %
@@ -158,3 +148,4 @@ cRIO_data(:,62)=[];  % TC not connected
 % Save file
 filename=strcat(outputDir,'\cRIO_data');
 save(filename,'cRIO_data');
+end 
