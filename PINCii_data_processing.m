@@ -19,7 +19,7 @@ current_folder = cd;
 
 % all other related codes of .m files put in to this 'm_code' folder
 % load all .m files in the 'm_code'
-addpath('./m_code');
+addpath('./codes');
 
 %% step 0:
 % put all raw data into a same folder
@@ -126,6 +126,16 @@ addpath('./m_code');
 %     output start_time of every averageed measurement statue should add 20 second flushtime
 %     output end_time of every averageed measurement statue should substract 10 second flushtime
 
+cd  = current_folder;
+dir = [cd, '/04_average_number_concentration'];
+data = [cd, '/03_raw_number_concentration/data_test_YW.mat'];
+dataColumnHeaders = [cd, '/03_raw_number_concentration/dataColumnHeaders_test_YW.mat'];
+beginFlushTime = 20;
+endFlushTime = 10;
+
+[data, dataColumnHeaders] = average_number_concentration(dir, data, ...
+    dataColumnHeaders, beginFlushTime, endFlushTime);
+
 %% step 5:
 % substract background signal from ambient data
 % 
@@ -135,11 +145,11 @@ addpath('./m_code');
 %     input:
 %         dir: folder path to save figures and middle data
 %         data: output of last step. data matrix. 
-%         dataColumnHeaders: output of last step. data column names
+%         dataColumnHeaders: ou tput of last step. data column names
 %         threshold: (#/L) 5 #/L backgroud signal as threshold
 %     output:
 %         data: matrix data after the time shift fixed
-%         dataColumnHeaders: start_time, end_time, INP, bkg_SD
+%         dataColumnHeaders: start_time, end_time, INP, bkg_SD, run_number
 % 
 % what should be done in this function:
 %     delele all data after background larger then threshold for each run
@@ -148,12 +158,20 @@ addpath('./m_code');
 %     plot figures by run to show data before and after offset correction, also background data
 %     backup outputs matrix and cell to a .mat file
 
+cd  = current_folder;
+dir = [cd, '/05_offset_correction_INP'];
+data = [cd, '/04_average_number_concentration/data.mat'];
+dataColumnHeaders = [cd, '/04_average_number_concentration/dataColumnHeaders.mat'];
+threshold = 5;
+
+[data, dataColumnHeaders] = offset_correction_INP(dir, data, dataColumnHeaders, threshold);
+
 %% step 6:
 % calculate the system uncertainty
 %
 % folder: './06_INP_uncertainty'
 % 
-% fuction [data, dataColumnHeaders] = INP_uncertainty(dir, data, dataColumnHeaders, flowUncertainty, OPCUncertainty)
+% function [data, dataColumnHeaders] = INP_uncertainty(dir, data, dataColumnHeaders, flowUncertainty, OPCUncertainty)
 %     input:
 %         dir: folder path to save figures and middle data
 %         data: output of last step. data matrix. 
@@ -162,10 +180,20 @@ addpath('./m_code');
 %         OPCUncertainty: to be decide
 %     output:
 %         data: matrix data after the time shift fixed
-%         dataColumnHeaders: start_time, end_time, INP, uncertainty
+%         dataColumnHeaders: start_time, end_time, INP, uncertainty, run_number
 % 
 % what should be done in this function:
 %     calculate the system uncertainty with formula: flowUncertainty + bkg_SD + OPCUncertainty
 %     data finalized
 %     plot figures by run, with uncertainties
-%     save outputs matrix and cell to a .mat file, also save final data as .csv or .txt file
+%     save outputs matrix and cell to a .mat file
+
+cd  = current_folder;
+dir = [cd, '/06_INP_uncertainty'];
+data = [cd, '/05_offset_correction_INP/data.mat'];
+dataColumnHeaders = [cd, '/05_offset_correction_INP/dataColumnHeaders.mat'];
+flowUncertainty = 0.02;
+OPCUncertainty = 0;
+
+[data, dataColumnHeaders] = INP_uncertainty(dir, data, dataColumnHeaders, flowUncertainty, OPCUncertainty);
+
