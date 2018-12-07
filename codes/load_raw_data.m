@@ -21,7 +21,7 @@ function [OPC_data,cRIO_data,ColumnHeaders] = load_raw_data(inputDir,outputDir)
 %%%%%%%%%%%%%%%%%
 % Load OPC data %
 %%%%%%%%%%%%%%%%%
-FileList=dir(fullfile(inputDir,'**','*OPC*'))
+FileList=dir(fullfile(inputDir,'**','*OPC*'));
 % Load data from each txt file containing OPC data
 for i=1:numel(FileList)
     fid=fopen(strcat(FileList(i).folder,'\',FileList(i).name));
@@ -40,8 +40,16 @@ for i=1:numel(FileList)
     data=datenum(Date);
     OPC_data=[OPC_data;data rawOPCdata{1,i}{1,3}];
 end 
+
+% Change the time from UTC+2 to UTC
+for i=1:length(OPC_data)
+    OPC_data(i,1)=addtodate(OPC_data(i,1),-2,'hour');
+end
+
 filename=strcat(outputDir,'\OPC_data');
 save(filename,'OPC_data');
+
+
 
 %%%%%%%%%%%%%%%%%%
 % Load cRIO data %
