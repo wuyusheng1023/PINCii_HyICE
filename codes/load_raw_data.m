@@ -1,36 +1,38 @@
-function [OPC_data,cRIO_data,ColumnHeaders] = load_raw_data(inputDir,outputDir)
+function [OPC_data,cRIO_data,OPC_ColumnHeaders,cRIO_ColumnHeaders] = load_raw_data(inputDir,outputDir)
 %% This is the code for step 1 to process HyICE PINCii data
 % This code should be used to load raw data into Matlab
 % Outputs will be saved in the folder: './01_load_raw_data'
 % 
 % Description:
-% function [OPC_data, cRIO_data, dataColumnHeaders] = load_raw_data(inputDir, outputDir)
+% function [OPC_data,cRIO_data,OPC_ColumnHeaders,cRIO_ColumnHeaders] = load_raw_data(inputDir,outputDir)
 %     input: 
 %         inputDir: path of all raw data files, './00_raw_data'
 %         outputDir: folder path to save figures and middle data
 %     output:
 %         OPC_data: one matrix contain all OPC raw data
 %         cRIO_data: one matrix contain all cRIO raw data
-%         dataColumnHeaders: one cell contain all the column headers names
+%         OPC_ColumnHeaders & cRIO_ColumnHeaders: one cell contain all the column headers names
 %         
 % what should be done in this function:
 %     load all OPC and cRIO raw data and combine them together into two files
+%     time is changed to UTC for both OPC and cRIO data
+%     Duplicates are removed for both datasets
+%     Datasets are sorted by time ascendingly
+%     Empty data from cRIO is removed (NB: this might need to be changed in the future)
 
-%% Load all raw data
 
 %%%%%%%%%%%%%%%%%
 % Load OPC data %
 %%%%%%%%%%%%%%%%%
-FileList=dir(fullfile(inputDir,'**','*OPC*'));
+%% Load all raw data
+FileList=dir(fullfile(inputDir,'**','*OPC*.txt'));
 % Load data from each txt file containing OPC data
 for i=1:numel(FileList)
     fid=fopen(strcat(FileList(i).folder,'\',FileList(i).name));
     rawOPCdata{i}=textscan(fid,'%{dd/MM/uuuu}D%D%f%f%f%f%f','HeaderLines', 1 ,'CollectOutput', 1);
     fclose(fid);
 end
-% Save all OPC data into one matrix 
-% Change time format to in Matlab format
-% Save matrix as .mat file
+% Save all OPC data into one matrix & Change time format to in Matlab format
 OPC_data=[];
 for i=1:numel(FileList)
     day=datestr(rawOPCdata{1,i}{1,1},'dd/mm/yyyy');
@@ -41,20 +43,30 @@ for i=1:numel(FileList)
     OPC_data=[OPC_data;data rawOPCdata{1,i}{1,3}];
 end 
 
-% Change the time from UTC+2 to UTC
+%% Remove duplicates
+OPC_data=unique(OPC_data,'row');
+
+%% Change the time from UTC+2 to UTC
 for i=1:length(OPC_data)
     OPC_data(i,1)=addtodate(OPC_data(i,1),-2,'hour');
 end
 
+%% Sort the data by time ascendingly
+OPC_data=sortrows(OPC_data,[1]);
+
+%% Save the data
 filename=strcat(outputDir,'\OPC_data');
 save(filename,'OPC_data');
 
-
+%% Create OPC column headers 
+OPC_ColumnHeaders={'DateTime (UTC)','Ch1 (0.3-1um)','Ch2 (1-3um)','Ch3 (3-5um)','Ch4 (>5um)','Backlight'};
+save([outputDir, '/OPC_ColumnHeaders.mat'], 'OPC_ColumnHeaders') ;
 
 %%%%%%%%%%%%%%%%%%
 % Load cRIO data %
 %%%%%%%%%%%%%%%%%%
-FileList=dir(fullfile(inputDir,'**','*test.tdms'))
+%% Load all data
+FileList=dir(fullfile(inputDir,'**','*test.tdms'));
 % Convert each file using the function convertTDMS and load the converted data
 for i=1:numel(FileList)
     ConvertedData{i}=convertTDMS(0,strcat(FileList(i).folder,'\',FileList(i).name));
@@ -142,7 +154,7 @@ for i=3:numel(FileList) %%% for loop should not include the 22nd and 23rd of Apr
     
     cRIO_data=[cRIO_data; time SP_inner_wall SP_outer_wall SP_evap TC1 TC2 TC3 TC4 Water_level Chamber_pres Sheath_dew_pt background_valve ];
 end
-% Delete empty data
+%% Delete empty data
 index = cRIO_data(:,1) > datenum([1904 1 1 0 0 0]);
 cRIO_data = cRIO_data(index,:);
 cRIO_data(:,36)=[];  % TC not connected
@@ -153,7 +165,17 @@ cRIO_data(:,62)=[];  % TC not connected
 cRIO_data(:,62)=[];  % TC not connected
 cRIO_data(:,62)=[];  % TC not connected
 
-% Save file
+%% Remove duplicates
+cRIO_data=unique(cRIO_data,'row');
+
+%% Sort by time ascendingly
+cRIO_data=sortrows(cRIO_data,[1]);
+
+%% Save file
 filename=strcat(outputDir,'\cRIO_data');
 save(filename,'cRIO_data');
+
+%% Create cRIO column headers 
+cRIO_ColumnHeaders={'Datetime (UTC)','Set Point Inner Wall','Set Point Outer Wall','Set Point Evap','TC1_0', 'TC1_1', 'TC1_2', 'TC1_3', 'TC1_4', 'TC1_5', 'TC1_6', 'TC1_7', 'TC1_8', 'TC1_9', 'TC1_10', 'TC1_11', 'TC1_12', 'TC1_13', 'TC1_14', 'TC1_15','TC2_0', 'TC2_1', 'TC2_2', 'TC2_3', 'TC2_4', 'TC2_5', 'TC2_6', 'TC2_7', 'TC2_8', 'TC2_9', 'TC2_10', 'TC2_11', 'TC2_12', 'TC2_13', 'TC2_14','TC3_0', 'TC3_1', 'TC3_2', 'TC3_3', 'TC3_4', 'TC3_5', 'TC3_6', 'TC3_7', 'TC3_8', 'TC3_9', 'TC3_10', 'TC3_11', 'TC3_12', 'TC3_13', 'TC3_14','TC4_0', 'TC4_1', 'TC4_2', 'TC4_3', 'TC4_4', 'TC4_5', 'TC4_6', 'TC4_7', 'TC4_8', 'TC4_9', 'TC4_10','Water level','Chamber pressure','Sheath Flow dew point','Background valve status'};
+save([outputDir, '/cRIO_ColumnHeaders.mat'], 'cRIO_ColumnHeaders') ;
 end 

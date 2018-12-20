@@ -1,56 +1,73 @@
  
-function [OPC_data_shifted] = fix_time_shift(inputDir,outputDir)
+function [OPC_data_shifted, OPC_ColumnHeaders] = fix_time_shift(inputDir,excelDir,outputDir)
 %% This is the code for step 2 to process HyICE PINCii data
-% This code should fix time difference between OPC and cRIO, data combine to one matrix
+% This code should fix time difference between OPC and cRIO computer
 % Outputs will be saved in the folder: './02_fix_time_shift'
 %
 % Description:
-% function [data, dataColumnHeaders] = fix_time_shift(dir,OPC_data, cRIO_data, dataColumnHeaders, time_shift)
+% function [OPC_data_shifted, OPC_ColumnHeaders] = fix_time_shift(inputDir,excelDir,outputDir)
 %     input:
-%         dir: folder path to save figures and middle data
-%         OPC_data: output of last step. OPC data matrix. 
-%         cRIO_data: output of last step. OPC data matrix. 
-%         dataColumnHeaders: output of last step. data column names
-%         time_shift: some excel of text file?
+%         outputDir: folder path to save figures and middle data
+%         inputDir: folder of last step. with OPC data matrix.
+%         excelDir: folder with the excel or text file containing the time_shift record
 %     output:
 %         data: matrix data after the time shift fixed
-%         dataColumnHeaders: start_time, end_time, OPC, valve, run_number
-%         
+%         dataColumnHeaders: 'DateTime (UTC)','Ch1 (0.3-1um)','Ch2 (1-3um)','Ch3 (3-5um)','Ch4 (>5um)','Backlight'
+%
 % what should be done in this function:
 %     fix the time shift problem
-%     plot figures by run to show the effect of time shift correction
-%     only keep useful columns for future step as output. columns: start_time, end_time, OPC, valve, run_number
 %     backup outputs matrix and cell to a .mat file
+%      /!\ For now the time shift is corrected only for the data measured during the run time, not for the whole dataset (data measured during two different runs isn't corrected)
 
 %% Load the data
 FileName   = 'OPC_data.mat';
 File       = fullfile(inputDir, FileName);
 OPC_data=load(File); %struct
-OPC_data= OPC_data.OPC_data ; %table 
+OPC_data= OPC_data.OPC_data ; %table
 
-%% Fix the time shift
-% Convert OPC datenum time to datetime (just to see real times)
-t = datetime(OPC_data(:,1),'ConvertFrom','datenum');
+%% Load the excel file with the time shift
+FileName = 'time_shift.xlsx';
+File= fullfile(excelDir, FileName);
+Runs = readtable(File);
+Runs = [Runs(:,1) Runs(:,2) Runs(:,3) Runs(:,4)];
+Start_time = datenum(table2array(Runs(:,2)));   % Start time of each run
+End_time = datenum(table2array(Runs(:,3)));     % End time of each run
+Time_shift = table2array(Runs(:,4));            % Time shift between OPC and cRIO computer for each run
 
-% Add 0, 10, 15, 20, 25, 35 or 50 secs
-TimeShift_0 = t([1:136697],1)+0./86400; %{'06-May-2018 21:45:00'}
-TimeShift_10 = t([136698:149131],1)+10./86400 ; %{'06-May-2018 21:45:00'}  to   09-May-2018 06:45:02
-TimeShift_15 = t([149132:179495],1)+15./86400 ; %09-May-2018 06:45:02  to   {'10-May-2018 03:15:00'}
-TimeShift_20 = t([179496:224302],1)+20./86400 ; %{'10-May-2018 03:15:00'}  to   {'11-May-2018 20:15:01'}
-TimeShift_25 = t([224303:337830],1)+25./86400 ; %{'11-May-2018 20:15:01'}  to   {'18-May-2018 15:45:01'}
-TimeShift_35 = t([337831:384386],1)+35./86400 ; %{'18-May-2018 15:45:01'}  to   {'27-May-2018 17:15:03'} 
-TimeShift_50 = t([384387:591661],1)+50./86400 ; %{'27-May-2018 17:15:03'}  to   {'10-Jun-2018 10:38:30'} end
+%% Divide the whole datasets by runs (by creating an index)
+n=length(Start_time);
+Runs_matrix=zeros(n,6);
+m=1;
+for x = [1:n];
+    [start index_start] = min(abs(OPC_data(:,1)-Start_time(x))); %Find the closest time values in the first column (time) of the data_concentration tabl
+    [finnish index_end] = min(abs(OPC_data(:,1)-End_time(x)));
+    
+    Runs_matrix(m,1)=x; % Store run number
+    Runs_matrix(m,2)=index_start; % Store position of starting point
+    Runs_matrix(m,3)=index_end; % Store position of ending point
+    Runs_matrix(m,4)=OPC_data(index_start,1); % Store position of ending point
+    Runs_matrix(m,5)=OPC_data(index_end,1); % Store position of ending point
+    
+    m=m+1;
+end
+Runs_matrix(:,6) = Time_shift;
 
-%Make a new array with shifted times
-t_shifted = [TimeShift_0 ; TimeShift_10 ; TimeShift_15 ; TimeShift_20 ; TimeShift_25 ; TimeShift_35 ; TimeShift_50];
+%% Fix time shift for the data measured during runs
+m=1;
+for x = [1:1:n];
+    OPC_data(Runs_matrix(x,2):Runs_matrix(x,3),1) = OPC_data(Runs_matrix(x,2):Runs_matrix(x,3),1)+Runs_matrix(x,6)./86400 ;
+    m=m+1;
+end
 
-%Convert new array to datenum
-t_shifted_datenum = datenum(t_shifted);
+OPC_data_shifted = OPC_data;
+t_shifted = datetime(OPC_data_shifted(:,1),'ConvertFrom','datenum'); % To plot against real datetime
 
-%Create new OPC_data_shifted table
-OPC_data_shifted = [t_shifted_datenum OPC_data(:,2:6)];
 
 %% Save the data
 filename=strcat(outputDir,'\OPC_data_shifted');
 save(filename,'OPC_data_shifted');
-end 
+
+%% Create OPC column headers 
+OPC_ColumnHeaders={'DateTime (UTC)','Ch1 (0.3-1um)','Ch2 (1-3um)','Ch3 (3-5um)','Ch4 (>5um)','Backlight'};
+save([outputDir, '/OPC_ColumnHeaders.mat'], 'OPC_ColumnHeaders') ;
+end
