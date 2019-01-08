@@ -86,7 +86,7 @@ filename=strcat(outputDir,'\data');
 save(filename,'data');
 
 %% Create  column headers 
-ColumnHeaders={'Run number','DateTime (UTC)','Ch1 (0.3-1um)','Ch2 (1-3um)','Ch3 (3-5um)','Ch4 (>5um)','Backlight''Set Point Inner Wall','Set Point Outer Wall','Set Point Evap','TC1_0', 'TC1_1', 'TC1_2', 'TC1_3', 'TC1_4', 'TC1_5', 'TC1_6', 'TC1_7', 'TC1_8', 'TC1_9', 'TC1_10', 'TC1_11', 'TC1_12', 'TC1_13', 'TC1_14', 'TC1_15','TC2_0', 'TC2_1', 'TC2_2', 'TC2_3', 'TC2_4', 'TC2_5', 'TC2_6', 'TC2_7', 'TC2_8', 'TC2_9', 'TC2_10', 'TC2_11', 'TC2_12', 'TC2_13', 'TC2_14','TC3_0', 'TC3_1', 'TC3_2', 'TC3_3', 'TC3_4', 'TC3_5', 'TC3_6', 'TC3_7', 'TC3_8', 'TC3_9', 'TC3_10', 'TC3_11', 'TC3_12', 'TC3_13', 'TC3_14','TC4_0', 'TC4_1', 'TC4_2', 'TC4_3', 'TC4_4', 'TC4_5', 'TC4_6', 'TC4_7', 'TC4_8', 'TC4_9', 'TC4_10','Water level','Chamber pressure','Sheath Flow dew point','Background valve status'};
+ColumnHeaders={'Run number','DateTime (UTC)','Ch1 (0.3-1um)','Ch2 (1-3um)','Ch3 (3-5um)','Ch4 (>5um)','Backlight','Set Point Inner Wall','Set Point Outer Wall','Set Point Evap','TC1_0', 'TC1_1', 'TC1_2', 'TC1_3', 'TC1_4', 'TC1_5', 'TC1_6', 'TC1_7', 'TC1_8', 'TC1_9', 'TC1_10', 'TC1_11', 'TC1_12', 'TC1_13', 'TC1_14', 'TC1_15','TC2_0', 'TC2_1', 'TC2_2', 'TC2_3', 'TC2_4', 'TC2_5', 'TC2_6', 'TC2_7', 'TC2_8', 'TC2_9', 'TC2_10', 'TC2_11', 'TC2_12', 'TC2_13', 'TC2_14','TC3_0', 'TC3_1', 'TC3_2', 'TC3_3', 'TC3_4', 'TC3_5', 'TC3_6', 'TC3_7', 'TC3_8', 'TC3_9', 'TC3_10', 'TC3_11', 'TC3_12', 'TC3_13', 'TC3_14','TC4_0', 'TC4_1', 'TC4_2', 'TC4_3', 'TC4_4', 'TC4_5', 'TC4_6', 'TC4_7', 'TC4_8', 'TC4_9', 'TC4_10','Water level','Chamber pressure','Sheath Flow dew point','Background valve status'};
 save([outputDir, '/ColumnHeaders.mat'], 'ColumnHeaders') ;
 
 %% Plot the data
