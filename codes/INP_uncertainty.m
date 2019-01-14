@@ -55,10 +55,13 @@ for run = 1:length(runs) % do loop for plot by run_number
     errorbar(x,y,err, 'k*', 'MarkerSize', 20)
     datetick('x')
     
+    index = data(:,5)==runs(run);
+    select_data = data(index,1);
+    
     title(['PINCii data, run number: ', num2str(runs(run)), ' start at: ', ...
-        datestr(data(1,1))],'FontSize',16)
+        datestr(select_data(1))],'FontSize',16)
     ylabel('#/L','fontsize',14)
-    xlabel('Local Time (UTC+2)','fontsize',14)
+    xlabel('UTC','fontsize',14)
     xlim([min(x)-20/1440 max(x)+20/1440])
     grid on
     
@@ -67,7 +70,7 @@ for run = 1:length(runs) % do loop for plot by run_number
     saveas(gcf,[dir, '/PINCii_final_run_', num2str(runs(run)), '.fig'])
     close;
     disp(['... PINCii data, run number: ', num2str(runs(run)), ' start at: ', ...
-        datestr(data(1,1)), ', figure saved ...']);
+        datestr(select_data(1)), ', figure saved ...']);
 end
 
 %% save data
