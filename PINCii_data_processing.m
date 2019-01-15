@@ -96,12 +96,15 @@ addpath('./codes');
 %         dataColumnHeaders: start_time, end_time, INP, valve, run_number
 % 
 % what should be done in this function:
-%     OPC data * 12 = #/L data
+%     OPC data * 6 = #/L data (inside chamber)
 %     using the factor (273+roomTemp)/273 to give standard #/L
 %     plot figures by run to show data before and after convertion
 %     backup outputs matrix and cell to a .mat file
 
 %% step 4:
+
+
+%% step 5:
 % get average data for each measurement status (background/ambient, by valve)
 %
 % folder: './04_average_number_concentration'
@@ -127,16 +130,16 @@ addpath('./codes');
 %     output end_time of every averageed measurement statue should substract 10 second flushtime
 
 cd  = current_folder;
-dir = [cd, '/04_average_number_concentration'];
-data = [cd, '/03_raw_number_concentration/data_test_YW.mat'];
-dataColumnHeaders = [cd, '/03_raw_number_concentration/dataColumnHeaders_test_YW.mat'];
+dir = [cd, '/05_average_number_concentration'];
+data = [cd, '/04_raw_number_concentration/data_concentration_updated.mat'];
+dataColumnHeaders = [cd, '/04_raw_number_concentration/ColumnHeaders.mat'];
 beginFlushTime = 20;
 endFlushTime = 10;
 
 [data, dataColumnHeaders] = average_number_concentration(dir, data, ...
     dataColumnHeaders, beginFlushTime, endFlushTime);
 
-%% step 5:
+%% step 6:
 % substract background signal from ambient data
 % 
 % folder: './05_offset_correction_INP'
@@ -150,6 +153,7 @@ endFlushTime = 10;
 %     output:
 %         data: matrix data after the time shift fixed
 %         dataColumnHeaders: start_time, end_time, INP, bkg_SD, run_number
+%         mulply by 10 gives ambient data
 % 
 % what should be done in this function:
 %     delele all data after background larger then threshold for each run
@@ -159,14 +163,14 @@ endFlushTime = 10;
 %     backup outputs matrix and cell to a .mat file
 
 cd  = current_folder;
-dir = [cd, '/05_offset_correction_INP'];
-data = [cd, '/04_average_number_concentration/data.mat'];
-dataColumnHeaders = [cd, '/04_average_number_concentration/dataColumnHeaders.mat'];
-threshold = 5;
+dir = [cd, '/06_offset_correction_INP'];
+data = [cd, '/05_average_number_concentration/data.mat'];
+dataColumnHeaders = [cd, '/05_average_number_concentration/dataColumnHeaders.mat'];
+threshold = 10; % inside the chamber
 
 [data, dataColumnHeaders] = offset_correction_INP(dir, data, dataColumnHeaders, threshold);
 
-%% step 6:
+%% step 7:
 % calculate the system uncertainty
 %
 % folder: './06_INP_uncertainty'
@@ -189,9 +193,9 @@ threshold = 5;
 %     save outputs matrix and cell to a .mat file
 
 cd  = current_folder;
-dir = [cd, '/06_INP_uncertainty'];
-data = [cd, '/05_offset_correction_INP/data.mat'];
-dataColumnHeaders = [cd, '/05_offset_correction_INP/dataColumnHeaders.mat'];
+dir = [cd, '/07_INP_uncertainty'];
+data = [cd, '/06_offset_correction_INP/data.mat'];
+dataColumnHeaders = [cd, '/06_offset_correction_INP/dataColumnHeaders.mat'];
 flowUncertainty = 0.02;
 OPCUncertainty = 0;
 

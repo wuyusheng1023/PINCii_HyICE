@@ -40,6 +40,8 @@ for run = 1:length(runs) % do loop for average by run_number
     end
 end
 
+valid_data(:,3) = valid_data(:,3)*10; % inside chamber to ambient
+
 %% average neighboring background data and synchronise to ambient data
 % add one column of background standard deviation to output for future calculation of system uncertainty
 
@@ -54,6 +56,7 @@ for run = 1:length(runs) % do loop for average by run_number
     data_run(ambient,3) = data_run(ambient,3) - offest; % substract background
     offset_data = [offset_data; [data_run(ambient,1:3), bkg_SD, data_run(ambient,5)]];
 end
+
 
 %% plot figures by run
 
@@ -91,12 +94,15 @@ for run = 1:length(runs) % do loop for plot by run_number
     plot(x,y, 'k*', 'MarkerSize', 20)
     datetick('x')
     
+    index = input_data(:,5)==runs(run);
+    select_data = input_data(index,1);
+    
     title(['PINCii data, run number: ', num2str(runs(run)), ' start at: ', ...
-        datestr(input_data(1,1))],'FontSize',16)
+        datestr(select_data(1))],'FontSize',16)
     ylabel('#/L','fontsize',14)
-    xlabel('Local Time (UTC+2)','fontsize',14)
+    xlabel('UTC','fontsize',14)
     xlim([min(x)-20/1440 max(x)+20/1440])
-    legend('BKG 5 sec.', 'Ambient 5 sec.', 'offset corr.')
+    legend('BKG', 'Ambient', 'offset corr.')
     grid on
     
     set(gcf,'PaperUnits','centimeters','PaperSize',[21 29.7],'PaperPositionMode','auto')
@@ -104,7 +110,7 @@ for run = 1:length(runs) % do loop for plot by run_number
     saveas(gcf,[dir, '/PINCii_offset_corr_run_', num2str(runs(run)), '.fig'])
     close;
     disp(['... PINCii data, run number: ', num2str(runs(run)), ' start at: ', ...
-        datestr(input_data(1,1)), ', figure saved ...']);
+        datestr(select_data(1)), ', figure saved ...']);
     
 end
 

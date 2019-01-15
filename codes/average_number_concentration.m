@@ -1,6 +1,6 @@
 function [data, dataColumnHeaders] = average_number_concentration(dir, data, ...
     dataColumnHeaders, beginFlushTime, endFlushTime)
-%% step 4:
+%% step 5:
 % get average data for each measurement status (background/ambient, by valve)
 %
 % folder: './04_average_number_concentration'
@@ -30,6 +30,11 @@ function [data, dataColumnHeaders] = average_number_concentration(dir, data, ...
 % start_time, end_time, INP, valve, run_number
 load(data);
 load(dataColumnHeaders);
+
+%% select, rebuild data column orders 
+data = data(data(:,1) ~= 0,:);
+data = [data(:,2)-5/60/1440 data(:,2) data(:,6) data(:,71) data(:,1)];
+dataColumnHeaders = {'start_time' 'end_time' 'INP' 'bkg_SD' 'run_number'};
 
 input_data = data; % backup input data for future use
 
@@ -104,10 +109,13 @@ for run = 1:length(runs) % do loop for plot by run_number
     plot(x,y, 'k*', 'MarkerSize', 20)
     datetick('x')
     
+    index = input_data(:,5)==runs(run);
+    select_data = input_data(index,1);
+    
     title(['PINCii data, run number: ', num2str(runs(run)), ' start at: ', ...
-        datestr(input_data(1,1))],'FontSize',16)
+        datestr(select_data(1))],'FontSize',16)
     ylabel('#/L','fontsize',14)
-    xlabel('Local Time (UTC+2)','fontsize',14)
+    xlabel('UTC','fontsize',14)
     legend('BKG 5 sec.', 'Ambient 5 sec.', 'BKG Ave.', 'Ambient Ave.')
     grid on
     
@@ -116,7 +124,7 @@ for run = 1:length(runs) % do loop for plot by run_number
     saveas(gcf,[dir, '/PINCii_ave_run_', num2str(runs(run)), '.fig'])
     close;
     disp(['... PINCii data, run number: ', num2str(runs(run)), ' start at: ', ...
-        datestr(input_data(1,1)), ', figure saved ...']);
+        datestr(select_data(1)), ', figure saved ...']);
 end
 
 %% save data
