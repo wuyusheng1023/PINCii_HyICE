@@ -1,6 +1,6 @@
 % step 3:
 % convert OPC counts data to standard #/L
-function [data_concentration] = raw_number_concentration(inputDir, outputDir,roomTemp)
+function [data_concentration,ColumnHeaders] = raw_number_concentration(inputDir, outputDir,roomTemp)
 
 % folder: './03_raw_number_concentration'
 % 
@@ -73,6 +73,7 @@ for x = [1:n]
     filename=[outputDir '\data_run_' run '.png'];
     filename=strcat(filename(1,1),filename(1,2),filename(1,3),filename(1,4));
     saveas(gcf,filename)
+    close;
 end
 end 
 

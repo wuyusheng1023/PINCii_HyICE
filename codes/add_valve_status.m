@@ -1,5 +1,3 @@
-clear all
-close all
 
 function [data_concentration_updated] = add_valve_status(inputDir, outputDir)
 
@@ -338,12 +336,13 @@ end
 
 
 %% Save the data
+data_concentration_updated=data;
 filename=strcat(outputDir,'\data_concentration_updated');
-save(filename,'data');
+save(filename,'data_concentration_updated');
 
 %% Figures
 data_concentration=data;
-for x=[1,2,26,27,28,29,30,51,52]
+for x=[1,2,3,27,28,29,30,31,52,53]
     figure('units','normalized','outerposition',[0 0 1 1])
     plot(datetime(data_concentration(data_concentration(:,1)==x,2),'Convertfrom','datenum'),data_concentration(data_concentration(:,1)==x,3),'.','MarkerSize',10,'Color',[ 0    0.4470    0.7410]);
     hold on
@@ -364,5 +363,7 @@ for x=[1,2,26,27,28,29,30,51,52]
     filename=[outputDir '\data_run_' run '.png'];
     filename=strcat(filename(1,1),filename(1,2),filename(1,3),filename(1,4));
     saveas(gcf,filename)
+    close;
 end
 end 
+

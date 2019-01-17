@@ -112,6 +112,7 @@ for x = [1:n]
     filename=[outputDir '\data_run_' run '.png'];
     filename=strcat(filename(1,1),filename(1,2),filename(1,3),filename(1,4));
     saveas(gcf,filename)
+    close;
 end
 
 end 
