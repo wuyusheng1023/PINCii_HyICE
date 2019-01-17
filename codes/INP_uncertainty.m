@@ -74,9 +74,9 @@ for run = 1:length(runs) % do loop for plot by run_number
 end
 
 %% save data
-data = data(:,1:4);
+data = data(:,1:5);
 save([dir, '/data.mat'], 'data')
-dataColumnHeaders = dataColumnHeaders(1:4);
+dataColumnHeaders = dataColumnHeaders(1:5);
 dlmwrite('filename.txt',data);
 save([dir, '/dataColumnHeaders.mat'], 'dataColumnHeaders')
 disp('... PINCii final data saved ...')

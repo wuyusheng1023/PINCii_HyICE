@@ -1,9 +1,9 @@
-function [data, dataColumnHeaders] = average_number_concentration(dir, data, ...
+function [data, dataColumnHeaders] = average_number_concentration(dir, data_concentration_updated, ...
     dataColumnHeaders, beginFlushTime, endFlushTime)
 %% step 5:
 % get average data for each measurement status (background/ambient, by valve)
 %
-% folder: './04_average_number_concentration'
+% folder: './05_average_number_concentration'
 % 
 % fuction [data, dataColumnHeaders] = average_number_concentration(dir,data, 
 %             dataColumnHeaders, beginFlushTime, endFlushTime)
@@ -28,24 +28,24 @@ function [data, dataColumnHeaders] = average_number_concentration(dir, data, ...
 
 %% load data from last step
 % start_time, end_time, INP, valve, run_number
-load(data);
+load(data_concentration_updated);
 load(dataColumnHeaders);
 
 %% select, rebuild data column orders 
-data = data(data(:,1) ~= 0,:);
-data = [data(:,2)-5/60/1440 data(:,2) data(:,6) data(:,71) data(:,1)];
+data_concentration_updated = data_concentration_updated(data_concentration_updated(:,1) ~= 0,:);
+data_concentration_updated = [data_concentration_updated(:,2)-5/60/1440 data_concentration_updated(:,2) data_concentration_updated(:,6) data_concentration_updated(:,71) data_concentration_updated(:,1)];
 dataColumnHeaders = {'start_time' 'end_time' 'INP' 'bkg_SD' 'run_number'};
 
-input_data = data; % backup input data for future use
+input_data = data_concentration_updated; % backup input data for future use
 
 %% average data for each measurement status
 beginFlushTime = beginFlushTime/60/1440; % sec. to day
 endFlushTime = endFlushTime/60/1440; % sec. to day
 
-runs = unique(data(:,5));   % run numbers
+runs = unique(data_concentration_updated(:,5));   % run numbers
 ave_data = []; % to store averaged data
 for run = 1:length(runs) % do loop for average by run_number
-    data_run = data(data(:,5)==run,:);  % get each run data
+    data_run = data_concentration_updated(data_concentration_updated(:,5)==run,:);  % get each run data
 
     valve_diff = find(diff(data_run(:,4)) ~= 0); % get valve change point
     valve_time = [[1; valve_diff+1], [valve_diff; size(data_run,1)]]; % valve status matrix
