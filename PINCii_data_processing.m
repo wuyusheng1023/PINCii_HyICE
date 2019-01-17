@@ -32,58 +32,89 @@ addpath('./codes');
 %     3. experimental_notes: maybe excel or txt files with the start and end time of each run
 
 %% step 1:
-% load raw data into Matlab
+% This code should be used to load raw data into Matlab
+% Outputs will be saved in the folder: './01_load_raw_data'
 % 
-% folder: './01_load_raw_data'
-% 
-% fuction [OPC_data, cRIO_data, dataColumnHeaders] = load_raw_data(inputDir, outputDir)
+% Description:
+% function [OPC_data,cRIO_data,OPC_ColumnHeaders,cRIO_ColumnHeaders] = load_raw_data(inputDir,outputDir)
 %     input: 
 %         inputDir: path of all raw data files, './00_raw_data'
 %         outputDir: folder path to save figures and middle data
 %     output:
 %         OPC_data: one matrix contain all OPC raw data
 %         cRIO_data: one matrix contain all cRIO raw data
-%         dataColumnHeaders: one cell contain all the column headers names
+%         OPC_ColumnHeaders & cRIO_ColumnHeaders: one cell contain all the column headers names
 %         
 % what should be done in this function:
-%     load all raw data and combine them together
-%     delele duplicate rows
-%     sort by time ascendingly
-%     create a new column for run number, dozens runs in all
-%     plot raw data by run for check. figure includ: OPC reading, temperatuers, valve ...
-%     delete invalid data acording to experimental notes
+%     load all OPC and cRIO raw data and combine them together into two files
+%     time is changed to UTC for both OPC and cRIO data
+%     Duplicates are removed for both datasets
+%     Datasets are sorted by time ascendingly
+%     Empty data from cRIO is removed (NB: this might need to be changed in the future)
+
+cd  = current_folder;
+inputDir = [cd, '/00_raw_data'];
+outputDir = [cd, '/01_load_raw_data'];
+[OPC_data,cRIO_data,OPC_ColumnHeaders,cRIO_ColumnHeaders] = load_raw_data(inputDir,outputDir);
+
+%% step 2:
+% This code should fix time difference between OPC and cRIO computer
+% Outputs will be saved in the folder: './02_fix_time_shift'
+%
+% Description:
+% function [OPC_data_shifted, OPC_ColumnHeaders] = fix_time_shift(inputDir,excelDir,outputDir)
+%     input:
+%         outputDir: folder path to save figures and middle data
+%         inputDir: folder of last step. with OPC data matrix.
+%         excelDir: folder with the excel or text file containing the time_shift record
+%     output:
+%         data: matrix data after the time shift fixed
+%         dataColumnHeaders: 'DateTime (UTC)','Ch1 (0.3-1um)','Ch2 (1-3um)','Ch3 (3-5um)','Ch4 (>5um)','Backlight'
+%
+% what should be done in this function:
+%     fix the time shift problem
 %     backup outputs matrix and cell to a .mat file
+%      /!\ For now the time shift is corrected only for the data measured during the run time, not for the whole dataset (data measured during two different runs isn't corrected)
+
+cd  = current_folder;
+inputDir = [cd, '/01_load_raw_data'];
+outputDir = [cd, '/02_fix_time_shift'];
+excelDir= cd;
+[OPC_data_shifted, OPC_ColumnHeaders] = fix_time_shift(inputDir,excelDir,outputDir);
+
+%% step 3:
+% This code should be used to combine all the data together (OPC and cRIO)
+% Outputs will be saved in the folder: './03_combine_data'
 % 
+% Description:
+% function [data, ColumnHeaders] = combine_data(inputDirOPC, inputDircRIO, outputDir)
+%     input: 
+%         inputDirOPC: path of OPC file (after fixing time shift)
+%         inputDircRIO: path of cRIO file
+%         outputDir: folder path to save figures and middle data
+%     output:
+%         data: matrix containing all OPC and cRIO data
+%         
+% This function:
+%     loads all raw data and combines them together
+%     creates a new column for run number, dozens runs in all
+%     plots raw data by run for check. figure includ: OPC reading, temperatuers, valve ...
+%
 % notes:
 %     the time of OPC file is the end time of every 5 seconds.
 %     the time of cRIO is the exactly the sampling time.
-    
-%% step 2:
-% fix time difference between OPC and cRIO, data combine to one matrix
-% 
-% folder: './02_fix_time_shift'
-% 
-% fuction [data, dataColumnHeaders] = fix_time_shift(dir,OPC_data, cRIO_data, dataColumnHeaders, time_shift)
-%     input:
-%         dir: folder path to save figures and middle data
-%         OPC_data: output of last step. OPC data matrix. 
-%         cRIO_data: output of last step. OPC data matrix. 
-%         dataColumnHeaders: output of last step. data column names
-%         time_shift: some excel of text file?
-%     output:
-%         data: matrix data after the time shift fixed
-%         dataColumnHeaders: start_time, end_time, OPC, valve, run_number
-%         
-% what should be done in this function:
-%     fix the time shift problem
-%     plot figures by run to show the effect of time shift correction
-%     only keep useful columns for future step as output. columns: start_time, end_time, OPC, valve, run_number
-%     backup outputs matrix and cell to a .mat file
 
-%% step 3:
+cd  = current_folder;
+inputDirOPC = [cd, '/02_fix_time_shift'];
+inputDircRIO = [cd, '/01_load_raw_data'];
+outputDir = [cd, '/03_combine_data'];
+excelDir= cd;
+[data, ColumnHeaders] = combine_data(inputDirOPC, inputDircRIO, outputDir,excelDir);
+
+%% step 4
 % convert OPC counts data to standard #/L
 % 
-% folder: './03_raw_number_concentration'
+% folder: './04_raw_number_concentration'
 % 
 % fuction [data, dataColumnHeaders] = raw_number_concentration(dir,data, dataColumnHeaders, roomTemp)
 %     input:
@@ -96,15 +127,32 @@ addpath('./codes');
 %         dataColumnHeaders: start_time, end_time, INP, valve, run_number
 % 
 % what should be done in this function:
-%     OPC data * 6 = #/L data (inside chamber)
+%     OPC data * 12 = #/L data
 %     using the factor (273+roomTemp)/273 to give standard #/L
 %     plot figures by run to show data before and after convertion
 %     backup outputs matrix and cell to a .mat file
 
-%% step 4:
+cd  = current_folder;
+inputDir = [cd, '/03_combine_data'];
+outputDir = [cd, '/04_raw_number_concentration'];
+roomTemp=25;
+[data_concentration,ColumnHeaders] = raw_number_concentration(inputDir, outputDir,roomTemp);
+
+%% step 5 :
+% add valve number 
+% additional step used for HyICE2018 campaign
+% function [data_concentration_updated] = add_valve_status(inputDir, outputDir)
+%    function used to add valve status for the 22nd and 23rd of April 2018
+%    + 14th and 15th of May 2018
+%    + 4th of June 2018
+%    New file is named data_concentration_updated
+cd  = current_folder;
+inputDir = [cd, '/04_raw_number_concentration'];
+outputDir = [cd, '/04_raw_number_concentration'];
+[data_concentration_updated] = add_valve_status(inputDir, outputDir);
 
 
-%% step 5:
+%% step 6:
 % get average data for each measurement status (background/ambient, by valve)
 %
 % folder: './04_average_number_concentration'
@@ -131,15 +179,15 @@ addpath('./codes');
 
 cd  = current_folder;
 dir = [cd, '/05_average_number_concentration'];
-data = [cd, '/04_raw_number_concentration/data_concentration_updated.mat'];
+data_concentration_updated = [cd, '/04_raw_number_concentration/data_concentration_updated.mat'];
 dataColumnHeaders = [cd, '/04_raw_number_concentration/ColumnHeaders.mat'];
 beginFlushTime = 20;
 endFlushTime = 10;
 
-[data, dataColumnHeaders] = average_number_concentration(dir, data, ...
+[data, dataColumnHeaders] = average_number_concentration(dir, data_concentration_updated, ...
     dataColumnHeaders, beginFlushTime, endFlushTime);
 
-%% step 6:
+%% step 7:
 % substract background signal from ambient data
 % 
 % folder: './05_offset_correction_INP'
@@ -170,7 +218,7 @@ threshold = 10; % inside the chamber
 
 [data, dataColumnHeaders] = offset_correction_INP(dir, data, dataColumnHeaders, threshold);
 
-%% step 7:
+%% step 8:
 % calculate the system uncertainty
 %
 % folder: './06_INP_uncertainty'
@@ -200,4 +248,32 @@ flowUncertainty = 0.02;
 OPCUncertainty = 0;
 
 [data, dataColumnHeaders] = INP_uncertainty(dir, data, dataColumnHeaders, flowUncertainty, OPCUncertainty);
+
+%% Step 9: Time series
+% function used to plot the whole time serie
+% /!!\ This function can/should be customized for each campaign
+%
+% function [data, dataColumnHeaders] = time_series(inputDir, outputDir, invalidruns)
+%   input:
+%           inputDir: folder with the last step data
+%           outputDir: folder to save the new data and plots
+%           invalidruns: run numbers with invalid data (ex: for the HyICE2018 campaign, invalidruns=40,49,50,51,63)
+%   output:
+%           data: matrix data after adding the half_time
+%           dataColumnHeaders: 'start_time(UTC)','end_time(UTC)','half_time(UTC)','INP','Uncertainty','Run number'
+%
+%  What should be done in this function:
+%   - remove invalid data: in the diary, some days are noted as 'weird' and
+%     the data should be removed; 
+%   - Replace negative values of INP concentration by 'NaN' values
+%   - Calculate the 'half_time': the time used to display the data (mean between start and end time)
+%   - plot the finale time serie
+%   - save the final data
+
+cd  = current_folder;
+inputDir=[cd, '/07_INP_uncertainty'];
+outputDir=[cd, '/08_time_series'];
+invalidruns=[40,49,50,51,63];
+[data, dataColumnHeaders] = time_series(inputDir, outputDir, invalidruns);
+
 
